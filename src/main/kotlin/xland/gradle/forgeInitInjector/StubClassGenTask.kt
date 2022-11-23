@@ -296,7 +296,7 @@ internal fun handleTag(handle: Handle, mv: MethodVisitor,
 fun registerStackTopToModBus(mv: MethodVisitor) {
     mv.run {
         visitMethodInsn(INVOKESTATIC, "net/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext", "get",
-            "()Lnet/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext", false)
+            "()Lnet/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext;", false)
         visitMethodInsn(INVOKEVIRTUAL, "net/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext", "getModEventBus",
             "()Lnet/minecraftforge/eventbus/api/IEventBus;", false)
         visitInsn(SWAP)
