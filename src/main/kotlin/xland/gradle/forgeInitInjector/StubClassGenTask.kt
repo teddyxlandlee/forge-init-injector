@@ -3,6 +3,7 @@
 package xland.gradle.forgeInitInjector
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Handle
@@ -14,11 +15,11 @@ import java.io.File
 import java.security.MessageDigest
 
 abstract class StubClassGenTask : DefaultTask() {
-    lateinit var stubPackage : String
-    lateinit var modId : String
-    var mainEntrypoint : Handle? = null
-    var clientEntrypoint : Handle? = null
-    var serverEntrypoint: Handle? = null
+    @Input lateinit var stubPackage : String
+    @Input lateinit var modId : String
+    @Input var mainEntrypoint : Handle? = null
+    @Input var clientEntrypoint : Handle? = null
+    @Input var serverEntrypoint: Handle? = null
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = H_INVOKESTATIC, isInterface : Boolean = false) {
         mainEntrypoint = Handle(handle, owner, name, desc, isInterface)
     }
@@ -28,6 +29,7 @@ abstract class StubClassGenTask : DefaultTask() {
     fun setServerEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = H_INVOKESTATIC, isInterface : Boolean = false) {
         serverEntrypoint = Handle(handle, owner, name, desc, isInterface)
     }
+    @Input
     val subscriptions = ModSubscriptions { modId }
 
     private val rootOutputDir get() =

@@ -2,6 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.31"
+    `java-gradle-plugin`
+    `maven-publish`
 }
 
 group = "xland.gradle"
@@ -19,12 +21,22 @@ dependencies {
     testImplementation(gradleKotlinDsl())
 }
 
+tasks.build {
+    dependsOn(tasks.kotlinSourcesJar)
+}
+
+gradlePlugin {
+    plugins.create("forge-init-injector") {
+        id = "xland.gradle.forge-init-injector"
+        displayName = "Forge Init Injector"
+        implementationClass = "xland.gradle.forgeInitInjector.ForgeInitInjectorPlugin"
+        description = "Add Forge initializer to the mods that doesn't introduce Forge dependency"
+    }
+}
+
 tasks.processResources {
     from("LICENSE.txt") {
-        into("META-INF/LICENSE_${project.name}.txt")
-    }
-    from(file("doc")) {
-        into("")
+        rename {"META-INF/LICENSE_${project.name}.txt" }
     }
 }
 
@@ -34,4 +46,10 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
 }
