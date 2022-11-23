@@ -10,7 +10,7 @@ private const val TASK_NAME = "generateStubForgeInitInjectorClasses"
 const val PLUGIN_VERSION = 1
 
 @Suppress("UNUSED")
-class ForgeInitInjectorPlugin : Plugin<Project> {
+open class ForgeInitInjectorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val t : StubClassGenTask = project.tasks.create(TASK_NAME, StubClassGenTask::class.java)
         project.extensions.create("forgeInitInjector", ForgeInitInjectorExtension::class.java, t)
@@ -33,7 +33,7 @@ class ForgeInitInjectorPlugin : Plugin<Project> {
 }
 
 @Suppress("UNUSED")
-class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
+open class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
     var stubPackage : String
         get() = wrapped.stubPackage
         set(value) { wrapped.stubPackage = value }

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xland.gradle"
-version = "1.0-SNAPSHOT"
+version = "1.0.1"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
@@ -21,8 +21,10 @@ dependencies {
     testImplementation(gradleKotlinDsl())
 }
 
-tasks.build {
-    dependsOn(tasks.kotlinSourcesJar)
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
 }
 
 gradlePlugin {
