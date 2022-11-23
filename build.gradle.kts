@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xland.gradle"
-version = "1.0.1"
+version = "1.0.4"
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
