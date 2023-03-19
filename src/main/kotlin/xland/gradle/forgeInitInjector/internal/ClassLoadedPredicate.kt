@@ -17,9 +17,6 @@ internal class ClassLoadedPredicate(theClass: String) : HasModPredicate() {
             val b01 = Label(); val b02 = Label(); val b03 = Label()
             visitCode()
 
-            visitLineNumber(hash + 1, b01)
-            visitLineNumber(hash + 2, b02)
-            visitLineNumber(hash + 3, b03)
             visitTryCatchBlock(b01, b02, b03, "java/lang/ClassNotFoundException")
 
             visitJumpInsn(Opcodes.GOTO, b01)
@@ -41,6 +38,11 @@ internal class ClassLoadedPredicate(theClass: String) : HasModPredicate() {
             visitLabel(b02)
             visitInsn(Opcodes.ICONST_1)
             visitInsn(Opcodes.IRETURN)
+            
+            visitLineNumber(hash + 1, b01)
+            visitLineNumber(hash + 2, b02)
+            visitLineNumber(hash + 3, b03)
+            
             visitMaxs(-1, -1)
             visitEnd()
         }

@@ -28,9 +28,6 @@ class ModSubscriptions(private val modId: () -> String) {
         var insertion = 1000
         m.forEach { (predicate, cvConsumer) ->
             val b01 = Label(); val b02 = Label(); val b03 = Label()
-            mv.visitLineNumber(insertion + 1, b01)
-            mv.visitLineNumber(insertion + 2, b02)
-            mv.visitLineNumber(insertion + 3, b03)
 
             mv.visitLabel(b01)
             predicate.genPredicateMethod(className, cv).let {
@@ -40,6 +37,10 @@ class ModSubscriptions(private val modId: () -> String) {
             mv.visitLabel(b02)
             handleTag(cvConsumer.genMethod(className, cv, definer, nameItr), mv, className, modId)
             mv.visitLabel(b03)
+            
+            mv.visitLineNumber(insertion + 1, b01)
+            mv.visitLineNumber(insertion + 2, b02)
+            mv.visitLineNumber(insertion + 3, b03)
 
             insertion += 100
         }

@@ -50,10 +50,13 @@ open class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
         get() = wrapped.serverEntrypoint
         set(value) { wrapped.serverEntrypoint = value }
     val subscriptions: ModSubscriptions get() = wrapped.subscriptions
+    @JvmOverloads
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = Opcodes.H_INVOKESTATIC, isInterface : Boolean = false)
         = wrapped.setMainEntrypoint(owner, name, desc, handle, isInterface)
+    @JvmOverloads
     fun setClientEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = Opcodes.H_INVOKESTATIC, isInterface : Boolean = false)
         = wrapped.setClientEntrypoint(owner, name, desc, handle, isInterface)
+    @JvmOverloads
     fun setServerEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = Opcodes.H_INVOKESTATIC, isInterface : Boolean = false)
         = wrapped.setServerEntrypoint(owner, name, desc, handle, isInterface)
 }
