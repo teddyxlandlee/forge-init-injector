@@ -107,7 +107,7 @@ abstract class StubClassGenTask : DefaultTask() {
 
     private inner class PresetEntrypointContainer(val lifecycleEvent: String,
                                             val dist: Int /*-1 client, 1 server, 0 normal*/,
-                                            val pkg = "minecraftforge") {
+                                            val pkg: String = "minecraftforge") {
         fun writeClass(nameGen: () -> String) : Pair<String, ClassWriter>? {
             val handle = entrypoint ?: return null
             val name = "$stubPackage/${nameGen()}"
