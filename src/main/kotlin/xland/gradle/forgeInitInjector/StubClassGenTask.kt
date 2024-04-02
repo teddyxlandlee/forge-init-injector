@@ -22,6 +22,7 @@ abstract class StubClassGenTask : DefaultTask() {
     @Internal var mainEntrypoint : Handle? = null
     @Internal var clientEntrypoint : Handle? = null
     @Internal var serverEntrypoint: Handle? = null
+    @Internal var supportNeo: Boolean = false
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = H_INVOKESTATIC, isInterface : Boolean = false) {
         mainEntrypoint = Handle(handle, owner, name, desc, isInterface)
     }
@@ -68,6 +69,11 @@ abstract class StubClassGenTask : DefaultTask() {
             visit("value", modId)
             visitEnd()
         }
+        if (supportNeo)
+        	cw.visitAnnotation("Lnet/neoforged/fml/common/Mod;", true).run {
+            	visit("value", modId)
+            	visitEnd()
+        	}
         cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null).run {
             visitCode()
             visitVarInsn(ALOAD, 0)
@@ -82,8 +88,15 @@ abstract class StubClassGenTask : DefaultTask() {
         listOf(
             PresetEntrypointContainer("net/minecraftforge/fml/event/lifecycle/FMLCommonSetupEvent", 0),
             PresetEntrypointContainer("net/minecraftforge/fml/event/lifecycle/FMLClientSetupEvent", -1),
-            PresetEntrypointContainer("net/minecraftforge/fml/event/lifecycle/FMLDedicatedServerSetupEvent", 1)
-        ).forEach {
+            PresetEntrypointContainer("net/minecraftforge/fml/event/lifecycle/FMLDedicatedServerSetupEvent", 1),
+        ).let { containers ->
+        	if (!supportNeo) containers
+        	else containers + listOf(
+        		PresetEntrypointContainer("net/neoforged/fml/event/lifecycle/FMLCommonSetupEvent", 0, "neoforged"),
+            	PresetEntrypointContainer("net/neoforged/fml/event/lifecycle/FMLClientSetupEvent", -1, "neoforged"),
+            	PresetEntrypointContainer("net/neoforged/fml/event/lifecycle/FMLDedicatedServerSetupEvent", 1, "neoforged"),
+        	)
+        }.forEach {
             it.writeClass(nameItr::next)?.let { p -> newClassAcceptor.accept(p.first, p.second) }
         }
 
@@ -93,7 +106,8 @@ abstract class StubClassGenTask : DefaultTask() {
     }
 
     private inner class PresetEntrypointContainer(val lifecycleEvent: String,
-                                            val dist: Int /*-1 client, 1 server, 0 normal*/) {
+                                            val dist: Int /*-1 client, 1 server, 0 normal*/,
+                                            val pkg = "minecraftforge") {
         fun writeClass(nameGen: () -> String) : Pair<String, ClassWriter>? {
             val handle = entrypoint ?: return null
             val name = "$stubPackage/${nameGen()}"
@@ -101,14 +115,14 @@ abstract class StubClassGenTask : DefaultTask() {
             cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, name, null,
                 "java/lang/Object", arrayOf("java/lang/Runnable")
             )
-            cw.visitAnnotation("Lnet/minecraftforge/fml/common/Mod\$EventBusSubscriber;", true).run {
+            cw.visitAnnotation("Lnet/$pkg/fml/common/Mod\$EventBusSubscriber;", true).run {
                 visit("modid", modId)
-                visitEnum("bus", "Lnet/minecraftforge/fml/common/Mod\$EventBusSubscriber\$Bus;",
+                visitEnum("bus", "Lnet/$pkg/fml/common/Mod\$EventBusSubscriber\$Bus;",
                     "MOD")
                 if (dist != 0) {
                     visitArray("value").run {
                         visitEnum(null,
-                            "Lnet/minecraftforge/api/distmarker/Dist;",
+                            "Lnet/$pkg/api/distmarker/Dist;",
                             if (dist < 0) "CLIENT" else "SERVER")
                         visitEnd()
                     }
@@ -120,14 +134,14 @@ abstract class StubClassGenTask : DefaultTask() {
             cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "ev\$${methodNameItr.next()}",
                 Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(lifecycleEvent)),
                     null, null).run {
-                subscribeEvent(this)
+                subscribeEvent(this, pkg)
                 visitCode()
                 visitTypeInsn(NEW, name)
                 visitInsn(DUP)
                 visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V", false)
                 visitVarInsn(ALOAD, 0)
                 visitInsn(SWAP)
-                visitMethodInsn(INVOKEVIRTUAL, "net/minecraftforge/fml/event/lifecycle/ParallelDispatchEvent",
+                visitMethodInsn(INVOKEVIRTUAL, "net/$pkg/fml/event/lifecycle/ParallelDispatchEvent",
                     "enqueueWork", "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;", false)
                 visitInsn(POP)
                 visitInsn(RETURN)
@@ -293,19 +307,25 @@ internal fun handleTag(handle: Handle, mv: MethodVisitor,
 }
 
 // Stack: -1 object, max +1
-fun registerStackTopToModBus(mv: MethodVisitor) {
+fun registerStackTopToModBus(mv: MethodVisitor, pkg: String = "minecraftforge") {
     mv.run {
         visitMethodInsn(INVOKESTATIC, "net/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext", "get",
-            "()Lnet/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext;", false)
+            "()Lnet/$pkg/fml/javafmlmod/FMLJavaModLoadingContext;", false)
         visitMethodInsn(INVOKEVIRTUAL, "net/minecraftforge/fml/javafmlmod/FMLJavaModLoadingContext", "getModEventBus",
-            "()Lnet/minecraftforge/eventbus/api/IEventBus;", false)
+            "()Lnet/${busPkg(pkg)}/api/IEventBus;", false)
         visitInsn(SWAP)
-        visitMethodInsn(INVOKEINTERFACE, "net/minecraftforge/eventbus/api/IEventBus", "register",
+        visitMethodInsn(INVOKEINTERFACE, "net/${busPkg(pkg)}/api/IEventBus", "register",
             "(Ljava/lang/Object;)V", true)
     }
 }
 
-fun subscribeEvent(mv: MethodVisitor) {
-    mv.visitAnnotation("Lnet/minecraftforge/eventbus/api/SubscribeEvent;", true)
+fun subscribeEvent(mv: MethodVisitor, pkg: String = "minecraftforge") {
+    mv.visitAnnotation("Lnet/${busPkg(pkg)}/api/SubscribeEvent;", true)
         .visitEnd()
+}
+
+private fun busPkg(pkg: String) : String = when (pkg) {
+    "neoforged" -> "neoforged/bus"
+   	"minecraftforge" -> "minecraftforge/eventbus"
+    else -> "$pkg/bus"
 }

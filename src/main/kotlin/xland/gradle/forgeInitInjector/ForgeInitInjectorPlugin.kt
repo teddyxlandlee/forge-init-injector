@@ -7,7 +7,7 @@ import org.objectweb.asm.Handle
 import org.objectweb.asm.Opcodes
 
 private const val TASK_NAME = "generateStubForgeInitInjectorClasses"
-const val PLUGIN_VERSION = 1
+const val PLUGIN_VERSION = 2
 
 @Suppress("UNUSED")
 open class ForgeInitInjectorPlugin : Plugin<Project> {
@@ -49,6 +49,9 @@ open class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
     var serverEntrypoint: Handle?
         get() = wrapped.serverEntrypoint
         set(value) { wrapped.serverEntrypoint = value }
+    var supportNeo: Boolean
+    	get() = wrapped.supportNeo
+    	set(value) { wrapped.supportNeo = value }
     val subscriptions: ModSubscriptions get() = wrapped.subscriptions
     @JvmOverloads
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = Opcodes.H_INVOKESTATIC, isInterface : Boolean = false)

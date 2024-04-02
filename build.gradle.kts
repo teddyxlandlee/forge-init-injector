@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "xland.gradle"
-version = "1.0.7"
+version = project.ext["project_version"]!!
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
