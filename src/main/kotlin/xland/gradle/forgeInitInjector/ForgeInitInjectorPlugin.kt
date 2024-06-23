@@ -49,8 +49,15 @@ open class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
     var serverEntrypoint: Handle?
         get() = wrapped.serverEntrypoint
         set(value) { wrapped.serverEntrypoint = value }
+    val neoFlags: MutableSet<NeoForgeFlag>
+        get() = wrapped.neoFlags
+    fun neoFlag(vararg flags: NeoForgeFlag) = wrapped.neoFlag(*flags)
+    fun neoFlag(vararg flags: String) = wrapped.neoFlag(*flags)
     var supportNeo: Boolean
+        //@Deprecated("NeoForge Flag provides a more comprehensive toggle", ReplaceWith("neoFlags.isNotEmpty()"))
     	get() = wrapped.supportNeo
+    	@Deprecated("NeoForge Flag provides a more comprehensive toggle. Use `neoFlag()` instead.")
+        @Suppress("DEPRECATION")
     	set(value) { wrapped.supportNeo = value }
     val subscriptions: ModSubscriptions get() = wrapped.subscriptions
     @JvmOverloads

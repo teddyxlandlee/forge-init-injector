@@ -22,7 +22,19 @@ abstract class StubClassGenTask : DefaultTask() {
     @Internal var mainEntrypoint : Handle? = null
     @Internal var clientEntrypoint : Handle? = null
     @Internal var serverEntrypoint: Handle? = null
-    @Internal var supportNeo: Boolean = false
+    @Internal val neoFlags: MutableSet<NeoForgeFlag> = mutableSetOf()
+    var supportNeo: Boolean
+        //@Deprecated("NeoForge Flag provides a more comprehensive toggle", ReplaceWith("neoFlags.isNotEmpty()"))
+        @Internal
+        get() = neoFlags.isNotEmpty()
+        @Deprecated("NeoForge Flag provides a more comprehensive toggle, so process it directly")
+        set(value) {
+        	neoFlags.clear()
+        	if (value)
+        		neoFlags.addAll(NeoForgeFlag.values())
+        }
+    fun neoFlag(vararg flags: NeoForgeFlag) { neoFlags.addAll(flags) }
+    fun neoFlag(vararg flags: String) { flags.forEach { name -> neoFlags.add(NeoForgeFlag.valueOf(name.uppercase())) } }
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = H_INVOKESTATIC, isInterface : Boolean = false) {
         mainEntrypoint = Handle(handle, owner, name, desc, isInterface)
     }
@@ -115,20 +127,36 @@ abstract class StubClassGenTask : DefaultTask() {
             cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, name, null,
                 "java/lang/Object", arrayOf("java/lang/Runnable")
             )
-            cw.visitAnnotation("Lnet/$pkg/fml/common/Mod\$EventBusSubscriber;", true).run {
-                visit("modid", modId)
-                visitEnum("bus", "Lnet/$pkg/fml/common/Mod\$EventBusSubscriber\$Bus;",
-                    "MOD")
-                if (dist != 0) {
-                    visitArray("value").run {
-                        visitEnum(null,
-                            "Lnet/$pkg/api/distmarker/Dist;",
-                            if (dist < 0) "CLIENT" else "SERVER")
-                        visitEnd()
-                    }
-                }
-                visitEnd()
-            }
+            if (pkg != "neoforged" || NeoForgeFlag.PRE_20_5 in neoFlags)
+	            cw.visitAnnotation("Lnet/$pkg/fml/common/Mod\$EventBusSubscriber;", true).run {
+	                visit("modid", modId)
+	                visitEnum("bus", "Lnet/$pkg/fml/common/Mod\$EventBusSubscriber\$Bus;",
+	                    "MOD")
+	                if (dist != 0) {
+	                    visitArray("value").run {
+	                        visitEnum(null,
+	                            "Lnet/$pkg/api/distmarker/Dist;",
+	                            if (dist < 0) "CLIENT" else "SERVER")
+	                        visitEnd()
+	                    }
+	                }
+	                visitEnd()
+	            }
+	        if (pkg == "neoforged" && NeoForgeFlag.POST_20_5 in neoFlags)
+                cw.visitAnnotation("Lnet/$pkg/fml/common/EventBusSubscriber;", true).run {
+	                visit("modid", modId)
+	                visitEnum("bus", "Lnet/$pkg/fml/common/EventBusSubscriber\$Bus;",
+	                    "MOD")
+	                if (dist != 0) {
+	                    visitArray("value").run {
+	                        visitEnum(null,
+	                            "Lnet/$pkg/api/distmarker/Dist;",
+	                            if (dist < 0) "CLIENT" else "SERVER")
+	                        visitEnd()
+	                    }
+	                }
+	                visitEnd()
+	            }
             val methodNameItr = nameItr()
 
             cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "ev\$${methodNameItr.next()}",
