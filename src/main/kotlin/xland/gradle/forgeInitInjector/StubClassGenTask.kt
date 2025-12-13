@@ -350,6 +350,11 @@ fun registerStackTopToModBus(mv: MethodVisitor, pkg: String = "minecraftforge") 
 fun subscribeEvent(mv: MethodVisitor, pkg: String = "minecraftforge") {
     mv.visitAnnotation("Lnet/${busPkg(pkg)}/api/SubscribeEvent;", true)
         .visitEnd()
+    if (pkg == "minecraftforge") {
+        // In net.minecraftforge:eventbus:10.+, @SubscribeEvent is repackaged
+        mv.visitAnnotation("Lnet/minecraftforge/eventbus/api/listener/SubscribeEvent;", true)
+            .visitEnd()
+    }
 }
 
 private fun busPkg(pkg: String) : String = when (pkg) {
