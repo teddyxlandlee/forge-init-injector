@@ -171,7 +171,7 @@ abstract class StubClassGenTask : DefaultTask() {
                 visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V", false)
                 visitVarInsn(ALOAD, 0)
                 visitInsn(SWAP)
-                visitMethodInsn(INVOKEVIRTUAL, "net/$pkg/fml/event/lifecycle/ParallelDispatchEvent",
+                visitMethodInsn(INVOKEVIRTUAL, lifecycleEvent,
                     "enqueueWork", "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;", false)
                 visitInsn(POP)
                 visitInsn(RETURN)
