@@ -77,6 +77,7 @@ abstract class StubClassGenTask : DefaultTask() {
         val cw = ClassWriter(3)
         cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, modClassName, null,
                     "java/lang/Object", null)
+        cw.visitSource("generated", null)
         cw.visitAnnotation("Lnet/minecraftforge/fml/common/Mod;", true).run {
             visit("value", modId)
             visitEnd()
@@ -127,6 +128,7 @@ abstract class StubClassGenTask : DefaultTask() {
             cw.visit(V1_8, ACC_PUBLIC + ACC_SUPER, name, null,
                 "java/lang/Object", arrayOf("java/lang/Runnable")
             )
+            cw.visitSource("generated", null)
             if (pkg != "neoforged" || NeoForgeFlag.PRE_20_5 in neoFlags)
 	            cw.visitAnnotation("Lnet/$pkg/fml/common/Mod\$EventBusSubscriber;", true).run {
 	                visit("modid", modId)
@@ -159,7 +161,7 @@ abstract class StubClassGenTask : DefaultTask() {
 	            }
             val methodNameItr = nameItr()
 
-            cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "ev\$${methodNameItr.next()}",
+            cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "ev$${methodNameItr.next()}",
                 Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(lifecycleEvent)),
                     null, null).run {
                 subscribeEvent(this, pkg)
@@ -328,10 +330,11 @@ internal fun handleTag(handle: Handle, mv: MethodVisitor,
     }
     mv.visitMethodInsn(op, handle.owner, handle.name, handle.desc, handle.isInterface)
 
-    when (mt.returnType.size) {
-        1 -> mv.visitInsn(POP)
-        2 -> mv.visitInsn(POP2)
-    }
+    mv.visitInsn(when (mt.returnType.size) {
+        1 -> POP
+        2 -> POP2
+        else -> NOP
+    })
 }
 
 // Stack: -1 object, max +1

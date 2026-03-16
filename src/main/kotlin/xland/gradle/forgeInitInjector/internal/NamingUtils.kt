@@ -4,9 +4,9 @@ import java.util.*
 import kotlin.math.absoluteValue
 
 private val b64Encoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
-internal fun asJavaIdentifier(s: String) : String {
-    return b64Encoder.encodeToString(s.toByteArray(Charsets.UTF_8))
+internal fun String.asJavaIdentifier() : String {
+    return b64Encoder.encodeToString(toByteArray(Charsets.UTF_8))
         .replace('-', '$')
 }
 
-internal fun lnHash(s: String) = s.hashCode().mod(100).absoluteValue * 100
+internal fun String.lnHash() = hashCode().mod(100).absoluteValue * 100

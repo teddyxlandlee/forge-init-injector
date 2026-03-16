@@ -9,8 +9,8 @@ internal class ClassLoadedPredicate(theClass: String) : HasModPredicate() {
     private val c : String = theClass.replace('/', '.')
 
     override fun genPredicateMethod(ownerClass: String, cv: ClassVisitor): String {
-        val mn = "cld$" + asJavaIdentifier(c)
-        val hash : Int = lnHash(mn)
+        val mn = "cld$" + c.asJavaIdentifier()
+        val hash : Int = mn.lnHash()
         cv.visitMethod(
             Opcodes.ACC_STATIC + Opcodes.ACC_PRIVATE + Opcodes.ACC_SYNTHETIC,
                 mn, "()Z", null, null).run {
