@@ -4,8 +4,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.Jar
 import org.objectweb.asm.Handle
 import org.objectweb.asm.Opcodes
+import javax.inject.Inject
 
 private const val TASK_NAME = "generateStubForgeInitInjectorClasses"
 const val PLUGIN_VERSION = "3.0"
@@ -13,19 +15,18 @@ const val PLUGIN_VERSION = "3.0"
 @Suppress("UNUSED")
 open class ForgeInitInjectorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val t : TaskProvider<StubClassGenTask> = project.tasks.register(TASK_NAME, StubClassGenTask::class.java)
-        project.extensions.create("forgeInitInjector", ForgeInitInjectorExtension::class.java, t)
+        project.extensions.create("forgeInitInjector", ForgeInitInjectorExtension::class.java)
 
         project.tasks.findByName("processResources").let {
             if (it !is Copy) return@let
-            it.dependsOn(t)
+            it.dependsOn(TASK_NAME)
             it.from(project.layout.buildDirectory.dir("forgeInitInjector/classes")) { p ->
                 p.into("")  // root
             }
         }
 
         project.tasks.findByName("jar").let {
-            if (it !is org.gradle.api.tasks.bundling.Jar) return@let
+            if (it !is Jar) return@let
             it.manifest { m ->
                 m.attributes(mapOf("ForgeInitInjector" to PLUGIN_VERSION))
             }
@@ -34,7 +35,10 @@ open class ForgeInitInjectorPlugin : Plugin<Project> {
 }
 
 @Suppress("UNUSED")
-open class ForgeInitInjectorExtension(val wrapped: StubClassGenTask) {
+open class ForgeInitInjectorExtension @Inject constructor(project: Project)  {
+    private val wrappedProvider: TaskProvider<StubClassGenTask> = project.tasks.register(TASK_NAME, StubClassGenTask::class.java)
+    val wrapped: StubClassGenTask get() = wrappedProvider.get()
+
     var stubPackage : String
         get() = wrapped.stubPackage
         set(value) { wrapped.stubPackage = value }
