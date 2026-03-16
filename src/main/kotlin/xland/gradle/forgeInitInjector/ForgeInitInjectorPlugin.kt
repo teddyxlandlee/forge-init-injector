@@ -3,22 +3,23 @@ package xland.gradle.forgeInitInjector
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.TaskProvider
 import org.objectweb.asm.Handle
 import org.objectweb.asm.Opcodes
 
 private const val TASK_NAME = "generateStubForgeInitInjectorClasses"
-const val PLUGIN_VERSION = 2
+const val PLUGIN_VERSION = "3.0"
 
 @Suppress("UNUSED")
 open class ForgeInitInjectorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val t : StubClassGenTask = project.tasks.create(TASK_NAME, StubClassGenTask::class.java)
+        val t : TaskProvider<StubClassGenTask> = project.tasks.register(TASK_NAME, StubClassGenTask::class.java)
         project.extensions.create("forgeInitInjector", ForgeInitInjectorExtension::class.java, t)
 
         project.tasks.findByName("processResources").let {
             if (it !is Copy) return@let
             it.dependsOn(t)
-            it.from(project.buildDir.resolve("forgeInitInjector/classes")) { p ->
+            it.from(project.layout.buildDirectory.dir("forgeInitInjector/classes")) { p ->
                 p.into("")  // root
             }
         }

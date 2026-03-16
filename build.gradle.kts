@@ -1,7 +1,8 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "2.0.21"
     `java-gradle-plugin`
     `maven-publish`
 }
@@ -16,7 +17,7 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    implementation("org.ow2.asm", "asm", "9.4")
+    implementation("org.ow2.asm", "asm", "9.8")
     testImplementation(kotlin("test"))
     testImplementation(gradleKotlinDsl())
 }
@@ -47,7 +48,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_1_8)
 }
 
 publishing {

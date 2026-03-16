@@ -17,9 +17,9 @@ class ModSubscriptions(private val modId: () -> String) {
         add(ClassLoadedPredicate(className), cvConsumer)
 
     fun addClassPredicate(className: String, cvConsumer: groovy.lang.Closure<Handle>) {
-        addClassPredicate(className, TargetMethodGen { s, classVisitor, definer, itr ->
+        addClassPredicate(className) { s, classVisitor, definer, itr ->
             cvConsumer.call(s, classVisitor, definer, itr)
-        })
+        }
     }
 
     fun insertModConstructor(className: String, cv: ClassVisitor, mv: MethodVisitor,

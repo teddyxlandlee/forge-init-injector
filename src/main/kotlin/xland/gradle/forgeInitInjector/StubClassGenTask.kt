@@ -31,7 +31,7 @@ abstract class StubClassGenTask : DefaultTask() {
         set(value) {
         	neoFlags.clear()
         	if (value)
-        		neoFlags.addAll(NeoForgeFlag.values())
+        		neoFlags.addAll(NeoForgeFlag.entries)
         }
     fun neoFlag(vararg flags: NeoForgeFlag) { neoFlags.addAll(flags) }
     fun neoFlag(vararg flags: String) { flags.forEach { name -> neoFlags.add(NeoForgeFlag.valueOf(name.uppercase())) } }
@@ -48,9 +48,9 @@ abstract class StubClassGenTask : DefaultTask() {
     val subscriptions = ModSubscriptions { modId }
 
     private val rootOutputDir get() =
-        project.buildDir.resolve("forgeInitInjector")
-    private val outputDir get() = rootOutputDir.resolve("classes")
-    private val checksumDir get() = rootOutputDir.resolve("checksums")
+        project.layout.buildDirectory.dir("forgeInitInjector")
+    private val outputDir get() = rootOutputDir.get().file("classes").asFile
+    private val checksumDir get() = rootOutputDir.get().file("checksums").asFile
 
     init {
         this.outputs.upToDateWhen { isUpToDate() }
