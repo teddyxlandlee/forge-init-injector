@@ -10,7 +10,7 @@ import org.objectweb.asm.Opcodes
 import javax.inject.Inject
 
 private const val TASK_NAME = "generateStubForgeInitInjectorClasses"
-const val PLUGIN_VERSION = "3.0"
+val pluginVersion : String get() = ForgeInitInjectorPlugin::class.java.`package`.specificationVersion
 
 @Suppress("UNUSED")
 open class ForgeInitInjectorPlugin : Plugin<Project> {
@@ -28,7 +28,7 @@ open class ForgeInitInjectorPlugin : Plugin<Project> {
         project.tasks.findByName("jar").let {
             if (it !is Jar) return@let
             it.manifest { m ->
-                m.attributes(mapOf("ForgeInitInjector" to PLUGIN_VERSION))
+                m.attributes(mapOf("ForgeInitInjector" to pluginVersion))
             }
         }
     }
@@ -64,6 +64,9 @@ open class ForgeInitInjectorExtension @Inject constructor(project: Project)  {
     	@Deprecated("NeoForge Flag provides a more comprehensive toggle. Use `neoFlag()` instead.")
         @Suppress("DEPRECATION")
     	set(value) { wrapped.supportNeo = value }
+    var supportLegacyForgeLifecycle: Boolean
+        get() = wrapped.supportLegacyForgeLifecycle
+        set(value) { wrapped.supportLegacyForgeLifecycle = value }
     val subscriptions: ModSubscriptions get() = wrapped.subscriptions
     @JvmOverloads
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = Opcodes.H_INVOKESTATIC, isInterface : Boolean = false)

@@ -51,6 +51,16 @@ tasks.withType<KotlinCompile> {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_1_8)
 }
 
+tasks.jar {
+    manifest.attributes(
+        "Specification-Title" to "Forge Init Injector",
+        "Specification-Vendor" to "teddyxlandlee",
+        "Specification-Version" to project.ext["spec_version"]!!,
+        "Implementation-Title" to project.name,
+        "Implementation-Version" to project.version,
+    )
+}
+
 publishing {
     repositories {
         mavenLocal()

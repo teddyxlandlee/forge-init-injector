@@ -8,6 +8,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Handle
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.Type
@@ -35,6 +36,7 @@ abstract class StubClassGenTask : DefaultTask() {
         }
     fun neoFlag(vararg flags: NeoForgeFlag) { neoFlags.addAll(flags) }
     fun neoFlag(vararg flags: String) { flags.forEach { name -> neoFlags.add(NeoForgeFlag.valueOf(name.uppercase())) } }
+    @Internal var supportLegacyForgeLifecycle: Boolean = false
     fun setMainEntrypoint(owner: String, name: String = "init", desc: String = "()V", handle: Int = H_INVOKESTATIC, isInterface : Boolean = false) {
         mainEntrypoint = Handle(handle, owner, name, desc, isInterface)
     }
@@ -89,8 +91,10 @@ abstract class StubClassGenTask : DefaultTask() {
         	}
         cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null).run {
             visitCode()
+            visitLineNumber(100, Label().apply(::visitLabel))
             visitVarInsn(ALOAD, 0)
             visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
+            visitLineNumber(101, Label().apply(::visitLabel))
             subscriptions.insertModConstructor(modClassName, cw, this, newClassAcceptor, nameItr)
             visitInsn(RETURN)
             visitMaxs(-1, -1)
@@ -166,21 +170,48 @@ abstract class StubClassGenTask : DefaultTask() {
                     null, null).run {
                 subscribeEvent(this, pkg)
                 visitCode()
+                visitLineNumber(4000, Label().apply(::visitLabel))
                 visitTypeInsn(NEW, name)
                 visitInsn(DUP)
                 visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V", false)
+                visitVarInsn(ASTORE, 1)
+
+                val labelBeforeEnqueue = Label()
+                val labelAfterEnqueue = Label()
+                visitLineNumber(4001, labelBeforeEnqueue)
+                visitLabel(labelBeforeEnqueue)
                 visitVarInsn(ALOAD, 0)
-                visitInsn(SWAP)
-                visitMethodInsn(INVOKEVIRTUAL, lifecycleEvent,
-                    "enqueueWork", "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;", false)
+                visitVarInsn(ALOAD, 1)
+                visitMethodInsn(
+                    INVOKEVIRTUAL, lifecycleEvent, "enqueueWork",
+                    "(Ljava/lang/Runnable;)Ljava/util/concurrent/CompletableFuture;",
+                    false
+                )
                 visitInsn(POP)
                 visitInsn(RETURN)
+                visitLabel(labelAfterEnqueue)
+
+                // Before MinecraftForge 1.16.2-33.0.30, `::enqueueWork` did not exist.
+                // Fallback: Run the work synchronously.
+                if (supportLegacyForgeLifecycle) {
+                    visitLineNumber(4020, labelAfterEnqueue)
+                    visitTryCatchBlock(
+                        labelBeforeEnqueue, labelAfterEnqueue, labelAfterEnqueue,
+                        // Beware: symbolic invocation throws NSM Error, not NSM Exception
+                        Type.getInternalName(NoSuchMethodError::class.java)
+                    )
+                    visitInsn(POP)
+                    visitVarInsn(ALOAD, 1)
+                    visitMethodInsn(INVOKEINTERFACE, "java/lang/Runnable", "run", "()V", true)
+                    visitInsn(RETURN)
+                }
                 visitMaxs(-1, -1)
                 visitEnd()
             }
 
             cw.visitMethod(0, "<init>", "()V", null, null).run {
                 visitCode()
+                visitLineNumber(200, Label().apply(::visitLabel))
                 visitVarInsn(ALOAD, 0)
                 visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
                 visitInsn(RETURN)
@@ -190,6 +221,7 @@ abstract class StubClassGenTask : DefaultTask() {
 
             cw.visitMethod(ACC_PUBLIC, "run", "()V", null, null).run {
                 visitCode()
+                visitLineNumber(800, Label().apply(::visitLabel))
                 handleTag(handle, this, name) { modId }
                 visitInsn(RETURN)
                 visitMaxs(-1, -1)
