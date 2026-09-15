@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     compileOnly(gradleApi())
-    implementation("org.ow2.asm", "asm", "9.8")
+    implementation("org.ow2.asm:asm:9.8")
     testImplementation(kotlin("test"))
     testImplementation(gradleKotlinDsl())
 }
